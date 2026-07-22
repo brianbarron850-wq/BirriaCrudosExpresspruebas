@@ -383,6 +383,7 @@ let state = {
   customer:'',
   generalNotes:'',
   prodFilter:'Todos',
+  productSearchTerm:'',
   cocinaFilter:'activos',
   cajaFilter:'pendientes',
   payDraft:null,
@@ -1179,7 +1180,15 @@ async function printTicket(orderId){
    ========================================================================= */
 async function viewProductos(){
   const db = await loadDB();
-  const rows = [...db.products].sort((a, b) => a.id - b.id).map(p=>`
+  const searchTerm = (state.productSearchTerm || '').toLowerCase();
+  
+  const filteredProducts = [...db.products].filter(p => {
+    return p.name.toLowerCase().includes(searchTerm) || 
+           p.category.toLowerCase().includes(searchTerm) || 
+           (p.description && p.description.toLowerCase().includes(searchTerm));
+  }).sort((a, b) => a.id - b.id);
+
+  const rows = filteredProducts.map(p=>`
     <tr>
       <td><b>${p.name}</b><br><span class="muted" style="font-size:12px;">${p.description || 'Sin descripción'}</span></td>
       <td>${p.category}</td>
@@ -1188,16 +1197,35 @@ async function viewProductos(){
         <button class="btn btn-sm" onclick="openProductModal(${p.id})">Editar</button>
         <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Eliminar</button>
       </td>
-    </tr>`).join('') || `<tr><td colspan="4" class="empty-state">Sin productos.</td></tr>`;
+    </tr>`).join('') || `<tr><td colspan="4" class="empty-state">No se encontraron productos.</td></tr>`;
+
   return `
   <div class="view-head">
     <div><h2>Productos</h2><p>Menú del restaurante y descripciones.</p></div>
     <button class="btn btn-primary" onclick="openProductModal()">+ Nuevo producto</button>
   </div>
+  <div class="card" style="margin-bottom:14px;">
+    <div class="field" style="margin-bottom:0;">
+      <label>Buscar productos</label>
+      <input type="text" id="prodSearchInput" placeholder="Escribe para filtrar por nombre, categoría o descripción..." value="${state.productSearchTerm || ''}" oninput="state.productSearchTerm=this.value; renderViewWithoutFocusLoss()">
+    </div>
+  </div>
   <div class="card table-wrap">
     <table><thead><tr><th>Nombre y Descripción</th><th>Categoría</th><th>Precio</th><th></th></tr></thead>
     <tbody>${rows}</tbody></table>
   </div>`;
+}
+
+function renderViewWithoutFocusLoss(){
+  const inputVal = state.productSearchTerm;
+  renderView().then(() => {
+    const input = document.getElementById('prodSearchInput');
+    if(input) {
+      input.value = inputVal;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  });
 }
 
 async function openProductModal(pid){
