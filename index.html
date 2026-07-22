@@ -615,6 +615,32 @@ function cancelEdit(){
 }
 
 /* =========================================================================
+   IMPRESIÓN AUTOMÁTICA COCINA
+   ========================================================================= */
+async function printKitchenTicket(orderId) {
+  const db = await loadDB();
+  const o = db.orders.find(x => x.id === orderId);
+  if(!o) return;
+  const items = o.items.map(i => `<div style="font-size:16px; font-weight:bold;">${i.qty}x ${i.name}</div>${i.notes ? `<div style="font-size:14px; margin-bottom:6px; padding-left:10px;">* Nota: ${i.notes}</div>` : '<br>'}`).join('');
+  
+  const w = window.open('', '_blank', 'width=380,height=600');
+  w.document.write(`<html><head><title>Cocina ${o.folio}</title>
+  <style>body{font-family:monospace; padding:14px; font-size:14px; color:#000;} h2{text-align:center;margin:0 0 4px;} .c{text-align:center;} hr{border:none;border-top:2px dashed #000; margin:10px 0;}</style>
+  </head><body>
+  <h2>COCINA</h2>
+  <div class="c" style="font-size:20px; font-weight:bold;">${o.folio}</div>
+  <div class="c">${fmtDateTime(o.createdAt)}</div>
+  <hr>Cliente: <b>${o.customer}</b><br>Atendió: ${o.waiterName}<hr>
+  ${items}
+  ${o.generalNotes ? '<hr>NOTAS GENERALES:<br><b>' + o.generalNotes + '</b>' : ''}
+  <hr>
+  <div class="c" style="margin-top:10px;">--- FIN PEDIDO ---</div>
+  <script>window.onload=()=>{window.print(); window.onafterprint=()=>{window.close();}; setTimeout(()=>window.close(), 1000);}<\/script>
+  </body></html>`);
+  w.document.close();
+}
+
+/* =========================================================================
    VIEW: PEDIDOS
    ========================================================================= */
 async function viewPedidos(){
@@ -643,11 +669,24 @@ async function viewPedidos(){
       `).join('')}
     </div>` : '';
 
+  const myPendingOrders = db.orders.filter(o => o.waiterId === s.id && o.status !== 'entregado' && o.status !== 'cancelado' && o.status !== 'barra');
+  const pendingOrdersHTML = myPendingOrders.length ? `
+    <div class="card" style="margin-bottom:18px; border-color:var(--corn); background:#fcf9f2;">
+      <div class="section-title" style="color:#8a6408;">📝 Mis pedidos en curso</div>
+      ${myPendingOrders.map(o=>`
+        <div class="flex-between" style="padding:8px 0; border-bottom:1px dashed var(--line);">
+          <div><b>${o.folio}</b> · ${o.customer} <span class="badge badge-${o.status}">${KITCHEN_LABEL[o.status] || o.status}</span></div>
+          <button class="btn btn-sm btn-warn" onclick="editOrder(${o.id})">Editar</button>
+        </div>
+      `).join('')}
+    </div>` : '';
+
   return `
   <div class="view-head">
     <div><h2>${state.editingOrderId ? 'Editar pedido' : 'Levantar pedido'}</h2><p>Selecciona productos, indica cantidades y envía a cocina y caja.</p></div>
   </div>
   ${barraAlertHTML}
+  ${pendingOrdersHTML}
   <div class="order-grid">
     <div class="card">
       <div class="section-title">Menú</div>
@@ -743,6 +782,7 @@ async function submitOrder(){
       o.originalTotal = total;
       logHistory(db, 'Pedido editado', `${o.folio} editado por ${s.name}`);
       toast('Pedido ' + o.folio + ' actualizado');
+      printKitchenTicket(o.id);
     }
   } else {
     const order = {
@@ -762,6 +802,7 @@ async function submitOrder(){
     db.orders.unshift(order);
     logHistory(db, 'Pedido creado', `${order.folio} · ${order.customer} · ${money(total)}`);
     toast('Pedido '+order.folio+' enviado');
+    printKitchenTicket(order.id);
   }
   renderView();
 }
@@ -1170,7 +1211,7 @@ async function printTicket(orderId){
   <hr>${pays}
   ${changeAmt > 0 ? `<hr><div style="display:flex;justify-content:space-between;font-weight:bold;">CAMBIO<span>${money(changeAmt)}</span></div>`:''}
   <div class="c" style="margin-top:10px;">¡Gracias por su compra!</div>
-  <script>window.onload=()=>{window.print();}<\/script>
+  <script>window.onload=()=>{window.print(); window.onafterprint=()=>{window.close();}; setTimeout(()=>window.close(), 1000);}<\/script>
   </body></html>`);
   w.document.close();
 }
