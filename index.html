@@ -6,6 +6,8 @@
 <title>LOS CRUDOS BIRRIERIA · Control de Restaurante</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<!-- LIBRERÍA QZ TRAY -->
+<script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.min.js"></script>
 <style>
 :root{
   --bg:#F6EEDD;
@@ -255,6 +257,53 @@ table tr:last-child td{border-bottom:none;}
 <div id="toast" class="toast"></div>
 
 <script>
+/* =========================================================================
+   CONFIGURACIÓN QZ TRAY PARA IMPRESIÓN SILENCIOSA
+   ========================================================================= */
+const PRINTER_NAME = "Kyocera ECOSYS M3145idn "; // <--- PON AQUÍ EL NOMBRE EXACTO DE TU IMPRESORA
+let qzConnected = false;
+
+async function initQZ() {
+    try {
+        if (!qz.websocket.isActive()) {
+            await qz.websocket.connect();
+            qzConnected = true;
+            console.log("QZ Tray conectado exitosamente.");
+        }
+    } catch (err) {
+        console.error("Error al conectar con QZ Tray:", err);
+        qzConnected = false;
+    }
+}
+
+async function silentPrint(htmlContent) {
+    if (!qzConnected) await initQZ();
+    
+    if (qzConnected) {
+        try {
+            // Buscamos la impresora
+            const config = qz.configs.create(PRINTER_NAME);
+            
+            // Enviamos el contenido HTML para que QZ lo renderice e imprima
+            const data = [{
+                type: 'pixel',
+                format: 'html',
+                flavor: 'plain',
+                data: htmlContent
+            }];
+            
+            await qz.print(config, data);
+            toast('Enviado a impresora silenciosamente');
+            return true;
+        } catch (e) {
+            console.error("Error al imprimir con QZ:", e);
+            toast('Fallo en impresión silenciosa. Usando método manual.');
+            return false;
+        }
+    }
+    return false;
+}
+
 /* =========================================================================
    BIRRIA EXPRESS · Sistema de gestión de restaurante
    Base de datos: Google Sheets vía Apps Script Web App
@@ -623,8 +672,7 @@ async function printKitchenTicket(orderId) {
   if(!o) return;
   const items = o.items.map(i => `<div style="font-size:16px; font-weight:bold;">${i.qty}x ${i.name}</div>${i.notes ? `<div style="font-size:14px; margin-bottom:6px; padding-left:10px;">* Nota: ${i.notes}</div>` : '<br>'}`).join('');
   
-  const w = window.open('', '_blank', 'width=380,height=600');
-  w.document.write(`<html><head><title>Cocina ${o.folio}</title>
+  const htmlTicket = `<html><head><title>Cocina ${o.folio}</title>
   <style>body{font-family:monospace; padding:14px; font-size:14px; color:#000;} h2{text-align:center;margin:0 0 4px;} .c{text-align:center;} hr{border:none;border-top:2px dashed #000; margin:10px 0;}</style>
   </head><body>
   <h2>COCINA</h2>
@@ -636,8 +684,17 @@ async function printKitchenTicket(orderId) {
   <hr>
   <div class="c" style="margin-top:10px;">--- FIN PEDIDO ---</div>
   <script>window.onload=()=>{window.print(); window.onafterprint=()=>{window.close();}; setTimeout(()=>window.close(), 1000);}<\/script>
-  </body></html>`);
-  w.document.close();
+  </body></html>`;
+
+  // Intentar imprimir por QZ Tray (Silencioso)
+  const isPrinted = await silentPrint(htmlTicket);
+  
+  // Si falla o no está conectado QZ Tray, usar el método clásico (Abre ventana)
+  if (!isPrinted) {
+      const w = window.open('', '_blank', 'width=380,height=600');
+      w.document.write(htmlTicket);
+      w.document.close();
+  }
 }
 
 /* =========================================================================
@@ -1195,8 +1252,7 @@ async function printTicket(orderId){
   const paidTotal = o.payments ? o.payments.reduce((a,p)=>a+p.amount,0) : 0;
   const changeAmt = o.change !== undefined && o.change > 0 ? o.change : (paidTotal > o.total ? paidTotal - o.total : 0);
 
-  const w = window.open('', '_blank', 'width=380,height=600');
-  w.document.write(`<html><head><title>Ticket ${o.folio}</title>
+  const htmlTicket = `<html><head><title>Ticket ${o.folio}</title>
   <style>body{font-family:monospace; padding:14px; font-size:13px;} h2{text-align:center;margin:0 0 4px;} .c{text-align:center;} hr{border:none;border-top:1px dashed #999;}</style>
   </head><body>
   <h2>Birria Express</h2>
@@ -1212,8 +1268,17 @@ async function printTicket(orderId){
   ${changeAmt > 0 ? `<hr><div style="display:flex;justify-content:space-between;font-weight:bold;">CAMBIO<span>${money(changeAmt)}</span></div>`:''}
   <div class="c" style="margin-top:10px;">¡Gracias por su compra!</div>
   <script>window.onload=()=>{window.print(); window.onafterprint=()=>{window.close();}; setTimeout(()=>window.close(), 1000);}<\/script>
-  </body></html>`);
-  w.document.close();
+  </body></html>`;
+
+  // Intentar imprimir por QZ Tray (Silencioso)
+  const isPrinted = await silentPrint(htmlTicket);
+  
+  // Si falla o no está conectado QZ Tray, usar el método clásico (Abre ventana)
+  if (!isPrinted) {
+      const w = window.open('', '_blank', 'width=380,height=600');
+      w.document.write(htmlTicket);
+      w.document.close();
+  }
 }
 
 /* =========================================================================
@@ -1605,6 +1670,10 @@ async function boot(){
   if(!s){ renderLogin(); return; }
   
   document.getElementById('root').innerHTML = `<div class="loading-overlay"><div style="font-size:36px;">🌶️</div>Conectando...</div>`;
+  
+  // Iniciar conexión a QZ Tray silenciosamente al cargar
+  initQZ();
+  
   await loadDB(true);
   renderShell();
 }
