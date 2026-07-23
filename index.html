@@ -270,8 +270,7 @@ let qzConnected = false;
 // -------------------------------------------------------------
 qz.security.setCertificatePromise(function(resolve, reject) {
     // REEMPLAZA ESTO POR EL CONTENIDO DE TU digital-certificate.txt
-    resolve("-----BEGIN CERTIFICATE-----\n" +
-            "MIIDnzCCAocCFBjWUmj3stZPpFPxdBLOh9NwQkTFMA0GCSqGSIb3DQEBCwUAMIGL
+    resolve("MIIDnzCCAocCFBjWUmj3stZPpFPxdBLOh9NwQkTFMA0GCSqGSIb3DQEBCwUAMIGL
 MQswCQYDVQQGEwJJTTESMBAGA1UECAwJSU1QUkVTT1JBMRIwEAYDVQQHDAlJTVBS
 RVNPUkExEjAQBgNVBAoMCUlNUFJFU09SQTESMBAGA1UECwwJSU1QUkVTT1JBMRIw
 EAYDVQQDDAlJTVBSRVNPUkExGDAWBgkqhkiG9w0BCQEWCUlNUFJFU09SQTAeFw0y
@@ -290,17 +289,14 @@ AQEAHDSYQ8K9CdLGOhycpj8J3wUj1jrLSqDfOpwtcyNwWENqUylcCcCrKZUT2Ek/
 t8NgnvX8EF6/sTiGAz5OBSakU7ms31DcmClYmD3vM4gR6fD6brHgbzhkmPN9ystV
 btHUFamZAAN1PA1A1E9wRjWL6RqI8iG0pYC5P9EJ9IeMsTmdRXlxEZj+tnnyE4Lx
 z3eFXW8m2NBli5O6WagMGLEClwb3zOaZsrOrRj//AuDGG3p+l7g1y/FprZq4iXMj
-gKKo+iWVt/GGns0TELV9aAulAA==
-" +
-            "-----END CERTIFICATE-----");
+  gKKo+iWVt/GGns0TELV9aAulAA==");
 });
 
 qz.security.setSignaturePromise(function(toSign) {
     return function(resolve, reject) {
         try {
             // REEMPLAZA ESTO POR EL CONTENIDO DE TU private-key.pem
-            var pk = KEYUTIL.getKey("-----BEGIN PRIVATE KEY-----\n" +
-                                    "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDL+zkbw6djNjpR
+            var pk = KEYUTIL.getKey("MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDL+zkbw6djNjpR
 S2IGtCA8ynaVkZN/bTvgd8sRybZi0Q774DD+2qlF/8IyomkRFYMf5R6QouXcdW2f
 R3qA7ntU3aQkMsaf8nW/14Fb+Dm9fTL0D99uCWYb0nAMpkemVCZm+/4GKIzWmV2T
 tlgT1+NV3rklEd0P70asZnQpZqGL7OIX3gsjoPyEwPhNGG8jbjB8gGZpcl9rq3Bx
@@ -325,9 +321,7 @@ jHNM9fuVy8cP/Iu3wY6aUOWwVA0esE8RjN+FnawVhbraxRsyLk7VVbrfImJwL1Mb
 reXnJBmtNBr53BpALtcoMgVP0oBb/+jaO+w5zrfRAoGAJcEadqP/6OK0zMeZK0uO
 ZDitW/lTe1UbP4YX2nhTJkESH+PC9rCr8cNbhV0aDr7yynjKXrIlKjyfJEBsEjvZ
 FPdcebE3VVqSdQIbXu/3zKAXvMZdQQDCtvmqDXpYlEK2xS/ktF9IoMZ73caK+cK0
-JCHxyG0Gfl340Meya7EzHtU=
-" +
-                                    "-----END PRIVATE KEY-----");
+JCHxyG0Gfl340Meya7EzHtU=");
             var sig = new KJUR.crypto.Signature({"alg": "SHA512withRSA"});
             sig.init(pk);
             sig.updateString(toSign);
