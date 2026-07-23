@@ -6,10 +6,6 @@
 <title>LOS CRUDOS BIRRIERIA · Control de Restaurante</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<!-- LIBRERÍA QZ TRAY -->
-<script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.min.js"></script>
-<!-- LIBRERÍA DE FIRMA CRIPTOGRÁFICA (Necesaria para certificados locales en QZ Tray) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.9.0/jsrsasign-all-min.js"></script>
 <style>
 :root{
   --bg:#F6EEDD;
@@ -259,126 +255,6 @@ table tr:last-child td{border-bottom:none;}
 <div id="toast" class="toast"></div>
 
 <script>
-/* =========================================================================
-   CONFIGURACIÓN QZ TRAY PARA IMPRESIÓN SILENCIOSA (CON FIRMA)
-   ========================================================================= */
-const PRINTER_NAME = "Kyocera ECOSYS M3145idn"; // Espacio final corregido
-let qzConnected = false;
-
-// -------------------------------------------------------------
-// INICIO BLOQUE DE SEGURIDAD PARA QZ TRAY "REMEMBER THIS DECISION"
-// -------------------------------------------------------------
-qz.security.setCertificatePromise(function(resolve, reject) {
-    // REEMPLAZA ESTO POR EL CONTENIDO DE TU digital-certificate.txt
-    resolve("MIIDnzCCAocCFBjWUmj3stZPpFPxdBLOh9NwQkTFMA0GCSqGSIb3DQEBCwUAMIGL
-MQswCQYDVQQGEwJJTTESMBAGA1UECAwJSU1QUkVTT1JBMRIwEAYDVQQHDAlJTVBS
-RVNPUkExEjAQBgNVBAoMCUlNUFJFU09SQTESMBAGA1UECwwJSU1QUkVTT1JBMRIw
-EAYDVQQDDAlJTVBSRVNPUkExGDAWBgkqhkiG9w0BCQEWCUlNUFJFU09SQTAeFw0y
-NjA3MjIyMzU0NDhaFw0zNjA3MTkyMzU0NDhaMIGLMQswCQYDVQQGEwJJTTESMBAG
-A1UECAwJSU1QUkVTT1JBMRIwEAYDVQQHDAlJTVBSRVNPUkExEjAQBgNVBAoMCUlN
-UFJFU09SQTESMBAGA1UECwwJSU1QUkVTT1JBMRIwEAYDVQQDDAlJTVBSRVNPUkEx
-GDAWBgkqhkiG9w0BCQEWCUlNUFJFU09SQTCCASIwDQYJKoZIhvcNAQEBBQADggEP
-ADCCAQoCggEBAMv7ORvDp2M2OlFLYga0IDzKdpWRk39tO+B3yxHJtmLRDvvgMP7a
-qUX/wjKiaREVgx/lHpCi5dx1bZ9HeoDue1TdpCQyxp/ydb/XgVv4Ob19MvQP324J
-ZhvScAymR6ZUJmb7/gYojNaZXZO2WBPX41XeuSUR3Q/vRqxmdClmoYvs4hfeCyOg
-/ITA+E0YbyNuMHyAZmlyX2urcHFXZ3ULZFBVwp4EbiYEQXs6rg4kqLDKGCVtMm21
-O/6rD2n7m53U5SKGJ+H26wGV8xvTsXbDJrlMhxtUB5pe7+pinZVD9lAZzb62Iv/T
-uuFGh5w7C/dY/4J0UG1dJkFO7xhjzEA7yRECAwEAATANBgkqhkiG9w0BAQsFAAOC
-AQEAHDSYQ8K9CdLGOhycpj8J3wUj1jrLSqDfOpwtcyNwWENqUylcCcCrKZUT2Ek/
-7hGuAojxslcwg0Xz0eIAQPGnjDZ1Lu0IDLT6eN9lO6GZHhT759ZT9J2yabDdPplZ
-t8NgnvX8EF6/sTiGAz5OBSakU7ms31DcmClYmD3vM4gR6fD6brHgbzhkmPN9ystV
-btHUFamZAAN1PA1A1E9wRjWL6RqI8iG0pYC5P9EJ9IeMsTmdRXlxEZj+tnnyE4Lx
-z3eFXW8m2NBli5O6WagMGLEClwb3zOaZsrOrRj//AuDGG3p+l7g1y/FprZq4iXMj
-  gKKo+iWVt/GGns0TELV9aAulAA==");
-});
-
-qz.security.setSignaturePromise(function(toSign) {
-    return function(resolve, reject) {
-        try {
-            // REEMPLAZA ESTO POR EL CONTENIDO DE TU private-key.pem
-            var pk = KEYUTIL.getKey("MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDL+zkbw6djNjpR
-S2IGtCA8ynaVkZN/bTvgd8sRybZi0Q774DD+2qlF/8IyomkRFYMf5R6QouXcdW2f
-R3qA7ntU3aQkMsaf8nW/14Fb+Dm9fTL0D99uCWYb0nAMpkemVCZm+/4GKIzWmV2T
-tlgT1+NV3rklEd0P70asZnQpZqGL7OIX3gsjoPyEwPhNGG8jbjB8gGZpcl9rq3Bx
-V2d1C2RQVcKeBG4mBEF7Oq4OJKiwyhglbTJttTv+qw9p+5ud1OUihifh9usBlfMb
-07F2wya5TIcbVAeaXu/qYp2VQ/ZQGc2+tiL/07rhRoecOwv3WP+CdFBtXSZBTu8Y
-Y8xAO8kRAgMBAAECggEAA/wwn4+dHrG1pjaxL7UXb6SbeDzXuzy2t6ITgjGVCf1w
-W+CjiGkcd0EByeQ1Jger8AS1igkasUnMhlj6xlfSakQpw6jHy2Js5T54OSQieaaf
-ZxgDyxYtK+Q6uu6JNhFNDkREUFm8takZpEwC0MFuIDR5nMUqctgfgvj98jyecZm6
-VLg3caDnh7vcKieibTDboWHqzHbAtX77OWgTBYsVhbqJQWPN8kRARCid8ZdoSA2R
-IM4C32jq+x4k+HZ2xeh3kFcWg3Hc0bAPiThiJwRv4BXNiKHL14yj94s4kJN1h3DQ
-+fFVzGcdKVX22HD/1NkYOQ1aLJX1Fr7Cd78jG+VceQKBgQD3Jp7YMitmIGyzIuus
-prKAEZHWdBdm1riHuprihjAX02C8NeXocZTLdVuidB5zF2azdtskjsuaxbr80D1+
-RwCTZURfHddJFWcWI6iJ5hkwMYS3+RuMnc55apDHJay0de2Hi5ZNzWPAXjpVvMsc
-20ZcjrYPgiydIBC0UPX0NtMA+QKBgQDTSOlkNbHWi6O+AFouHZqo2MpJZyMAusy5
-5mNCgQSGCKEnHKeD0PAETJ+36NS5ayHThm3t5VpExHJkTiC9EWbU/UhpXM26jije
-w0AMhJMXV2JQqKPnde6oMqeaca96p9f3K8oI4mDewU3jqiJG9uYCq3MHxdlmuXQr
-1Qdz6NMm2QKBgQCQcmr+EnxY6PR+0hcJxjenMB2bSChxO2eINGDXqfOrySfNeHbR
-nqiHLSUMUm+FdpTYqMu1lxuabpw1rAN0rUzB2LrYGJm9phukzdxwFCJ+j0JxP8+B
-JK4LOmQ5cGR66D2WLdf/yt3VDX1spLXVPLbn26S+dadbgeUhbfwB6pTyCQKBgDxL
-HD86i2tcIfgAhbuPOylf5CoaQoTcybtrIXxC8RWGtOZCaRNWtoejjhifWsUm61o/
-jHNM9fuVy8cP/Iu3wY6aUOWwVA0esE8RjN+FnawVhbraxRsyLk7VVbrfImJwL1Mb
-reXnJBmtNBr53BpALtcoMgVP0oBb/+jaO+w5zrfRAoGAJcEadqP/6OK0zMeZK0uO
-ZDitW/lTe1UbP4YX2nhTJkESH+PC9rCr8cNbhV0aDr7yynjKXrIlKjyfJEBsEjvZ
-FPdcebE3VVqSdQIbXu/3zKAXvMZdQQDCtvmqDXpYlEK2xS/ktF9IoMZ73caK+cK0
-JCHxyG0Gfl340Meya7EzHtU=");
-            var sig = new KJUR.crypto.Signature({"alg": "SHA512withRSA"});
-            sig.init(pk);
-            sig.updateString(toSign);
-            var hex = sig.sign();
-            resolve(stob64(hextorstr(hex)));
-        } catch (err) {
-            console.error("Error firmando la petición para QZ Tray", err);
-            reject(err);
-        }
-    };
-});
-// -------------------------------------------------------------
-// FIN BLOQUE DE SEGURIDAD
-// -------------------------------------------------------------
-
-
-async function initQZ() {
-    try {
-        if (!qz.websocket.isActive()) {
-            await qz.websocket.connect();
-            qzConnected = true;
-            console.log("QZ Tray conectado exitosamente.");
-        }
-    } catch (err) {
-        console.error("Error al conectar con QZ Tray:", err);
-        qzConnected = false;
-    }
-}
-
-async function silentPrint(htmlContent) {
-    if (!qzConnected) await initQZ();
-    
-    if (qzConnected) {
-        try {
-            // Buscamos la impresora
-            const config = qz.configs.create(PRINTER_NAME);
-            
-            // Enviamos el contenido HTML para que QZ lo renderice e imprima
-            const data = [{
-                type: 'pixel',
-                format: 'html',
-                flavor: 'plain',
-                data: htmlContent
-            }];
-            
-            await qz.print(config, data);
-            toast('Enviado a impresora silenciosamente');
-            return true;
-        } catch (e) {
-            console.error("Error al imprimir con QZ:", e);
-            toast('Fallo en impresión silenciosa. Usando método manual.');
-            return false;
-        }
-    }
-    return false;
-}
-
 /* =========================================================================
    BIRRIA EXPRESS · Sistema de gestión de restaurante
    Base de datos: Google Sheets vía Apps Script Web App
@@ -747,7 +623,8 @@ async function printKitchenTicket(orderId) {
   if(!o) return;
   const items = o.items.map(i => `<div style="font-size:16px; font-weight:bold;">${i.qty}x ${i.name}</div>${i.notes ? `<div style="font-size:14px; margin-bottom:6px; padding-left:10px;">* Nota: ${i.notes}</div>` : '<br>'}`).join('');
   
-  const htmlTicket = `<html><head><title>Cocina ${o.folio}</title>
+  const w = window.open('', '_blank', 'width=380,height=600');
+  w.document.write(`<html><head><title>Cocina ${o.folio}</title>
   <style>body{font-family:monospace; padding:14px; font-size:14px; color:#000;} h2{text-align:center;margin:0 0 4px;} .c{text-align:center;} hr{border:none;border-top:2px dashed #000; margin:10px 0;}</style>
   </head><body>
   <h2>COCINA</h2>
@@ -759,17 +636,8 @@ async function printKitchenTicket(orderId) {
   <hr>
   <div class="c" style="margin-top:10px;">--- FIN PEDIDO ---</div>
   <script>window.onload=()=>{window.print(); window.onafterprint=()=>{window.close();}; setTimeout(()=>window.close(), 1000);}<\/script>
-  </body></html>`;
-
-  // Intentar imprimir por QZ Tray (Silencioso)
-  const isPrinted = await silentPrint(htmlTicket);
-  
-  // Si falla o no está conectado QZ Tray, usar el método clásico (Abre ventana)
-  if (!isPrinted) {
-      const w = window.open('', '_blank', 'width=380,height=600');
-      w.document.write(htmlTicket);
-      w.document.close();
-  }
+  </body></html>`);
+  w.document.close();
 }
 
 /* =========================================================================
@@ -1327,7 +1195,8 @@ async function printTicket(orderId){
   const paidTotal = o.payments ? o.payments.reduce((a,p)=>a+p.amount,0) : 0;
   const changeAmt = o.change !== undefined && o.change > 0 ? o.change : (paidTotal > o.total ? paidTotal - o.total : 0);
 
-  const htmlTicket = `<html><head><title>Ticket ${o.folio}</title>
+  const w = window.open('', '_blank', 'width=380,height=600');
+  w.document.write(`<html><head><title>Ticket ${o.folio}</title>
   <style>body{font-family:monospace; padding:14px; font-size:13px;} h2{text-align:center;margin:0 0 4px;} .c{text-align:center;} hr{border:none;border-top:1px dashed #999;}</style>
   </head><body>
   <h2>Birria Express</h2>
@@ -1343,17 +1212,8 @@ async function printTicket(orderId){
   ${changeAmt > 0 ? `<hr><div style="display:flex;justify-content:space-between;font-weight:bold;">CAMBIO<span>${money(changeAmt)}</span></div>`:''}
   <div class="c" style="margin-top:10px;">¡Gracias por su compra!</div>
   <script>window.onload=()=>{window.print(); window.onafterprint=()=>{window.close();}; setTimeout(()=>window.close(), 1000);}<\/script>
-  </body></html>`;
-
-  // Intentar imprimir por QZ Tray (Silencioso)
-  const isPrinted = await silentPrint(htmlTicket);
-  
-  // Si falla o no está conectado QZ Tray, usar el método clásico (Abre ventana)
-  if (!isPrinted) {
-      const w = window.open('', '_blank', 'width=380,height=600');
-      w.document.write(htmlTicket);
-      w.document.close();
-  }
+  </body></html>`);
+  w.document.close();
 }
 
 /* =========================================================================
@@ -1645,40 +1505,108 @@ async function viewUsuarios(){
     </tr>`).join('');
 
   let histFiltered = db.history;
-  
-  if (state.selectedHistoryUser) {
-    histFiltered = histFiltered.filter(h => h.user === state.selectedHistoryUser);
+  if(state.selectedHistoryUser){
+    histFiltered = db.history.filter(h => h.user === state.selectedHistoryUser);
   }
-  const histHTML = histFiltered.slice(0, 50).map(h => `
-    <div class="hist-item">
-      <div class="ht">${fmtDateTime(h.ts)} · ${h.user} (${h.role})</div>
-      <div><b>${h.action}</b>: ${h.detail}</div>
-    </div>`).join('') || '<div class="empty-state">No hay historial para mostrar.</div>';
+  const hist = histFiltered.slice(0,80).map(h=>`
+    <div class="hist-item"><div class="ht">${fmtDateTime(h.ts)} · ${h.user}</div><div><b>${h.action}:</b> ${h.detail}</div></div>
+  `).join('') || `<div class="empty-state">Sin movimientos ${state.selectedHistoryUser ? 'para '+state.selectedHistoryUser : ''}.</div>`;
 
   return `
   <div class="view-head">
-    <div><h2>Usuarios</h2><p>Administración del equipo de trabajo.</p></div>
+    <div><h2>Usuarios</h2><p>Control de accesos.</p></div>
     <button class="btn btn-primary" onclick="openUserModal()">+ Nuevo usuario</button>
   </div>
   <div class="card table-wrap" style="margin-bottom:18px;">
-    <table><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th></th></tr></thead>
+    <table><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th style="text-align:right;">Acciones</th></tr></thead>
     <tbody>${rows}</tbody></table>
   </div>
   <div class="card">
-    <div class="section-title">Historial de Actividad ${state.selectedHistoryUser ? \`(Filtrado: \${state.selectedHistoryUser})\` : ''}</div>
-    <div class="hist-list">\${histHTML}</div>
+    <div class="section-title">Historial de movimientos ${state.selectedHistoryUser ? '· '+state.selectedHistoryUser : '(Selecciona un usuario)'}</div>
+    <div class="hist-list">${hist}</div>
   </div>`;
 }
 
-// Funciones base para la vista de usuarios
-function openUserModal(uid){ toast('Función de edición de usuarios pendiente de implementar'); }
-function deleteUser(uid){ toast('Función de eliminación de usuarios pendiente de implementar'); }
+async function openUserModal(uidNum){
+  const db = await loadDB();
+  const u = uidNum ? db.users.find(x=>x.id===uidNum) : {name:'', username:'', password:'', role:'mesero'};
+  document.getElementById('modalHost').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this) closeModalHost()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModalHost()">✕</button>
+      <h2>${uidNum?'Editar usuario':'Nuevo usuario'}</h2>
+      <div class="field"><label>Nombre</label><input id="ufName" value="${u.name}"></div>
+      <div class="field"><label>Usuario</label><input id="ufUser" value="${u.username}"></div>
+      <div class="field"><label>Contraseña</label><input id="ufPass" type="text" value="${u.password}"></div>
+      <div class="field"><label>Rol</label>
+        <select id="ufRole">
+          ${Object.keys(ROLE_LABEL).map(r=>`<option value="${r}" ${u.role===r?'selected':''}>${ROLE_LABEL[r]}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="saveUser(${uidNum||'null'})">Guardar</button>
+    </div>
+  </div>`;
+}
 
-// Inicializador principal
+async function saveUser(uidNum){
+  const name = document.getElementById('ufName').value.trim();
+  const username = document.getElementById('ufUser').value.trim();
+  const password = document.getElementById('ufPass').value;
+  const role = document.getElementById('ufRole').value;
+  if(!name || !username || !password){ toast('Completa los campos'); return; }
+  const db = await loadDB();
+  if(db.users.some(x=>x.username.toLowerCase()===username.toLowerCase() && x.id!==uidNum)){
+    toast('El usuario ya existe'); return;
+  }
+  if(uidNum){
+    const u = db.users.find(x=>x.id===uidNum);
+    Object.assign(u, {name, username, password, role});
+    logHistory(db, 'Usuario editado', name);
+  }else{
+    const id = nextId(db,'user');
+    db.users.push({id, name, username, password, role});
+    logHistory(db, 'Usuario creado', name);
+  }
+  closeModalHost();
+  toast('Guardado');
+  renderView();
+}
+
+async function deleteUser(uidNum){
+  const db = await loadDB();
+  const u = db.users.find(x=>x.id===uidNum);
+  if(!confirm('¿Eliminar a '+(u?u.name:'')+'?')) return;
+  db.users = db.users.filter(x=>x.id!==uidNum);
+  logHistory(db, 'Usuario eliminado', u?u.name:'');
+  toast('Eliminado');
+  renderView();
+}
+
+/* =========================================================================
+   BOOT Y AUTO-REFRESH CONCURRENTE
+   ========================================================================= */
+
+setInterval(async () => {
+  if (getSession() && !isSaving) {
+    const oldStr = JSON.stringify(dbCache);
+    await loadDB(true);
+    const newStr = JSON.stringify(dbCache);
+    if (oldStr !== newStr) {
+      const activeTag = document.activeElement ? document.activeElement.tagName : '';
+      if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA' && activeTag !== 'SELECT') {
+        renderView();
+      }
+    }
+  }
+}, 8000);
+
 async function boot(){
-  await loadDB();
-  if(!getSession()) renderLogin();
-  else { state.view = ROLE_VIEWS[getSession().role][0]; renderShell(); }
+  const s = getSession();
+  if(!s){ renderLogin(); return; }
+  
+  document.getElementById('root').innerHTML = `<div class="loading-overlay"><div style="font-size:36px;">🌶️</div>Conectando...</div>`;
+  await loadDB(true);
+  renderShell();
 }
 
 boot();
